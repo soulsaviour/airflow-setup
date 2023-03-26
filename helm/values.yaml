@@ -1,0 +1,31 @@
+# Values for the official Apache Airflow chart: apache-airflow/airflow 1.22.0
+# (Airflow 3.2.2). Install with scripts/install.sh.
+
+# Each task runs in its own pod: no idle Celery workers, per-task resources,
+# and a failing task can't take its neighbours down with it.
+executor: KubernetesExecutor
+
+# --- Metadata database -------------------------------------------------------
+# A managed PostgreSQL (RDS or similar). The connection URI lives in a secret
+# created by scripts/create-secrets.sh, never in this file.
+postgresql:
+  enabled: false
+data:
+  metadataSecretName: airflow-metadata-db
+
+# Every task pod opens database connections; PgBouncer keeps the count sane.
+pgbouncer:
+  enabled: true
+
+# --- Keys that must survive upgrades ------------------------------------------
+# Left unset, the chart generates new ones on every upgrade, which breaks
+# encrypted connections and logs everyone out.
+fernetKeySecretName: airflow-fernet-key
+apiSecretKeySecretName: airflow-api-secret-key
+jwtSecretName: airflow-jwt-secret
+webserverSecretKeySecretName: airflow-webserver-secret-key
+
+# Users come from your identity provider or `airflow users create`, not a
+# default admin/admin account.
+createUserJob:
+  enabled: false
