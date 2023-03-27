@@ -29,3 +29,17 @@ webserverSecretKeySecretName: airflow-webserver-secret-key
 # default admin/admin account.
 createUserJob:
   enabled: false
+
+# --- DAGs ----------------------------------------------------------------------
+# A git-sync sidecar pulls dags/ from this repository every minute, so merging
+# to main is the deployment.
+dags:
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: true
+    repo: https://github.com/your-github-user/airflow-setup.git
+    branch: main
+    subPath: dags
+    depth: 1
+    period: 60s
