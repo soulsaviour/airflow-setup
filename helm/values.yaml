@@ -43,3 +43,28 @@ dags:
     subPath: dags
     depth: 1
     period: 60s
+
+# --- Task logs -----------------------------------------------------------------
+# Task pods are deleted when they finish, so logs go to S3 and the UI reads
+# them back from there. Access comes from IRSA: the service accounts below
+# assume an IAM role allowed to read and write the log prefix.
+logs:
+  persistence:
+    enabled: false
+
+config:
+  logging:
+    remote_logging: "True"
+    remote_base_log_folder: s3://example-airflow-logs/task-logs
+    remote_log_conn_id: aws_default
+    encrypt_s3_logs: "False"
+
+workers:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/airflow-task-logs
+
+apiServer:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/airflow-task-logs
