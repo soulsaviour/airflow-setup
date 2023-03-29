@@ -1,0 +1,18 @@
+# Self-contained values for a laptop cluster (kind, minikube): bundled
+# PostgreSQL, local logs and a default admin/admin user. Not for production.
+#   VALUES=helm/values-local.yaml scripts/install.sh
+executor: KubernetesExecutor
+
+postgresql:
+  enabled: true
+
+createUserJob:
+  enabled: true
+
+dags:
+  gitSync:
+    enabled: true
+    repo: https://github.com/your-github-user/airflow-setup.git
+    branch: main
+    subPath: dags
+    period: 30s
