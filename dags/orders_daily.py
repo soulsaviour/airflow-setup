@@ -6,11 +6,10 @@ Re-running a day replaces that day's rows, so retries and backfills are safe.
 """
 
 import pendulum
-from airflow.sdk import Asset, Variable, dag, task
+from airflow.sdk import Variable, dag, task
 
+from orders_lib.assets import DAILY_REVENUE
 from orders_lib.transform import parse_orders, summarise
-
-DAILY_REVENUE = Asset("postgres://analytics/public/daily_revenue")
 
 
 @dag(

@@ -7,7 +7,7 @@ as fresh data lands and never against a half-loaded day.
 import pendulum
 from airflow.sdk import Variable, dag, task
 
-from orders_daily import DAILY_REVENUE
+from orders_lib.assets import DAILY_REVENUE
 from orders_lib.report import render_report
 
 QUERY = """
