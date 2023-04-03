@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  AIRFLOW_VERSION: "3.2.2"
+  CHART_VERSION: "1.22.0"
+
+jobs:
+  dags:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Airflow
+        run: |
+          pip install "apache-airflow==${AIRFLOW_VERSION}" \
+            --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.12.txt"
+          pip install pytest ruff
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Unit and DAG integrity tests
+        env:
+          AIRFLOW_HOME: ${{ runner.temp }}/airflow
+          AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+        run: pytest -q
+
+  chart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v5
+      - name: Install kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz \
+            | tar -xz -C /usr/local/bin kubeconform
+      - name: Render the chart with each values file
+        run: |
+          helm repo add apache-airflow https://airflow.apache.org
+          for values in helm/values.yaml helm/values-local.yaml; do
+            echo "== $values"
+            helm template airflow apache-airflow/airflow --version "$CHART_VERSION" \
+              --namespace airflow -f "$values" \
+              | kubeconform -summary -ignore-missing-schemas
+          done
+
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: shellcheck scripts/*.sh
